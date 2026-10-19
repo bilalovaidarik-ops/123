@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}{{ category.name }} - ShopMart{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{% url 'shop:home' %}">Главная</a></li>
+        <li class="breadcrumb-item active">{{ category.name }}</li>
+    </ol>
+</nav>
+
+<div class="mb-4">
+    <h1><i class="bi bi-tag"></i> {{ category.name }}</h1>
+    {% if category.description %}
+    <p class="text-muted lead">{{ category.description }}</p>
+    {% endif %}
+    <span class="text-muted">{{ products|length }} товаров</span>
+</div>
+
+{% if products %}
+<div class="row g-4">
+    {% for product in products %}
+    <div class="col-6 col-md-4 col-lg-3">
+        <div class="card h-100 position-relative">
+            {% if product.discount_percent %}
+            <span class="badge-sale">-{{ product.discount_percent }}%</span>
+            {% endif %}
+            <img src="{% if product.image %}{{ product.image.url }}{% else %}https://via.placeholder.com/300x220/e9ecef/6c757d?text={{ product.name|truncatechars:15 }}{% endif %}"
+                 class="card-img-top" alt="{{ product.name }}">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <a href="{% url 'shop:product_detail' product.slug %}" class="text-decoration-none text-dark">
+                        {{ product.name }}
+                    </a>
+                </h6>
+                <div class="mt-2">
+                    <span class="price-current">{{ product.price }} ₽</span>
+                    {% if product.old_price %}
+                    <span class="price-old ms-1">{{ product.old_price }} ₽</span>
+                    {% endif %}
+                </div>
+                {% if product.stock > 0 %}
+                <small class="text-success"><i class="bi bi-check-circle"></i> В наличии</small>
+                {% else %}
+                <small class="text-danger"><i class="bi bi-x-circle"></i> Нет в наличии</small>
+                {% endif %}
+            </div>
+            <div class="card-footer bg-white border-0 pb-3">
+                {% if product.stock > 0 %}
+                <button onclick="addToCart({{ product.id }})" class="btn btn-primary w-100">
+                    <i class="bi bi-cart-plus"></i> В корзину
+                </button>
+                {% else %}
+                <button class="btn btn-secondary w-100" disabled>Нет в наличии</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="text-center py-5">
+    <i class="bi bi-box display-1 text-muted"></i>
+    <h4 class="mt-3">В этой категории пока нет товаров</h4>
+</div>
+{% endif %}
+{% endblock %}

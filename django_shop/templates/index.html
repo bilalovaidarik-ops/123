@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% block title %}ShopMart - Главная{% endblock %}
+
+{% block content %}
+<!-- Герой секция -->
+<div class="hero-section text-center">
+    <h1 class="display-4 fw-bold mb-3">Добро пожаловать в ShopMart!</h1>
+    <p class="lead mb-4">Лучшие товары по выгодным ценам с быстрой доставкой</p>
+    <a href="{% url 'shop:product_list' %}" class="btn btn-light btn-lg px-5">
+        <i class="bi bi-bag"></i> Перейти в каталог
+    </a>
+</div>
+
+<!-- Категории -->
+<section class="mb-5">
+    <h2 class="mb-4"><i class="bi bi-grid"></i> Категории</h2>
+    <div class="row g-3">
+        {% for category in categories %}
+        <div class="col-6 col-md-4 col-lg-2">
+            <a href="{% url 'shop:category_products' category.slug %}" class="text-decoration-none">
+                <div class="category-card">
+                    {% if forloop.counter == 1 %}
+                    <i class="bi bi-phone text-primary"></i>
+                    {% elif forloop.counter == 2 %}
+                    <i class="bi bi-bag text-success"></i>
+                    {% elif forloop.counter == 3 %}
+                    <i class="bi bi-book text-warning"></i>
+                    {% elif forloop.counter == 4 %}
+                    <i class="bi bi-trophy text-danger"></i>
+                    {% elif forloop.counter == 5 %}
+                    <i class="bi bi-house text-info"></i>
+                    {% else %}
+                    <i class="bi bi-controller text-secondary"></i>
+                    {% endif %}
+                    <h6 class="mt-2">{{ category.name }}</h6>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Товары со скидкой -->
+{% if sale_products %}
+<section class="mb-5">
+    <h2 class="mb-4"><i class="bi bi-fire"></i> Горячие скидки</h2>
+    <div class="row g-4">
+        {% for product in sale_products %}
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="card h-100 position-relative">
+                {% if product.discount_percent %}
+                <span class="badge-sale">-{{ product.discount_percent }}%</span>
+                {% endif %}
+                <img src="{% if product.image %}{{ product.image.url }}{% else %}https://via.placeholder.com/300x220/e9ecef/6c757d?text={{ product.name|truncatechars:15 }}{% endif %}"
+                     class="card-img-top" alt="{{ product.name }}">
+                <div class="card-body">
+                    <h6 class="card-title">{{ product.name }}</h6>
+                    <div class="mt-2">
+                        <span class="price-current">{{ product.price }} ₽</span>
+                        {% if product.old_price %}
+                        <span class="price-old ms-1">{{ product.old_price }} ₽</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0 pb-3">
+                    <button onclick="addToCart({{ product.id }})" class="btn btn-primary w-100">
+                        <i class="bi bi-cart-plus"></i> В корзину
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Популярные товары -->
+<section class="mb-5">
+    <h2 class="mb-4"><i class="bi bi-star"></i> Популярные товары</h2>
+    <div class="row g-4">
+        {% for product in featured_products %}
+        <div class="col-6 col-md-4 col-lg-3">
+            <div class="card h-100 position-relative">
+                {% if product.discount_percent %}
+                <span class="badge-sale">-{{ product.discount_percent }}%</span>
+                {% endif %}
+                <img src="{% if product.image %}{{ product.image.url }}{% else %}https://via.placeholder.com/300x220/e9ecef/6c757d?text={{ product.name|truncatechars:15 }}{% endif %}"
+                     class="card-img-top" alt="{{ product.name }}">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <a href="{% url 'shop:product_detail' product.slug %}" class="text-decoration-none text-dark">
+                            {{ product.name }}
+                        </a>
+                    </h6>
+                    <p class="card-text text-muted small">{{ product.category.name }}</p>
+                    <div class="mt-2">
+                        <span class="price-current">{{ product.price }} ₽</span>
+                        {% if product.old_price %}
+                        <span class="price-old ms-1">{{ product.old_price }} ₽</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-footer bg-white border-0 pb-3">
+                    <button onclick="addToCart({{ product.id }})" class="btn btn-primary w-100">
+                        <i class="bi bi-cart-plus"></i> В корзину
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Преимущества -->
+<section class="mb-5">
+    <div class="row g-4 text-center">
+        <div class="col-md-3">
+            <div class="p-4">
+                <i class="bi bi-truck display-4 text-primary"></i>
+                <h5 class="mt-3">Быстрая доставка</h5>
+                <p class="text-muted">Доставим заказ за 1-3 дня</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-4">
+                <i class="bi bi-shield-check display-4 text-success"></i>
+                <h5 class="mt-3">Гарантия качества</h5>
+                <p class="text-muted">Только оригинальные товары</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-4">
+                <i class="bi bi-arrow-repeat display-4 text-warning"></i>
+                <h5 class="mt-3">Возврат 14 дней</h5>
+                <p class="text-muted">Лёгкий возврат и обмен</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-4">
+                <i class="bi bi-headset display-4 text-danger"></i>
+                <h5 class="mt-3">Поддержка 24/7</h5>
+                <p class="text-muted">Всегда на связи</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

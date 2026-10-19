@@ -1,0 +1,151 @@
+{% extends 'base.html' %}
+{% block title %}Оформление заказа - ShopMart{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="bi bi-credit-card"></i> Оформление заказа</h1>
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="mb-4">Данные для доставки</h5>
+                <form id="checkoutForm">
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Имя *</label>
+                            {{ form.first_name }}
+                            <div class="invalid-feedback" id="error-first_name"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Фамилия *</label>
+                            {{ form.last_name }}
+                            <div class="invalid-feedback" id="error-last_name"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Email *</label>
+                            {{ form.email }}
+                            <div class="invalid-feedback" id="error-email"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Телефон *</label>
+                            {{ form.phone }}
+                            <div class="invalid-feedback" id="error-phone"></div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Адрес доставки *</label>
+                            {{ form.address }}
+                            <div class="invalid-feedback" id="error-address"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Город *</label>
+                            {{ form.city }}
+                            <div class="invalid-feedback" id="error-city"></div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Почтовый индекс *</label>
+                            {{ form.postal_code }}
+                            <div class="invalid-feedback" id="error-postal_code"></div>
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <button type="submit" class="btn btn-primary btn-lg w-100" id="submitBtn">
+                        <i class="bi bi-check-circle"></i> Подтвердить заказ
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-body">
+                <h5>Ваш заказ</h5>
+                <hr>
+                {% for item in items %}
+                <div class="d-flex justify-content-between mb-2">
+                    <div>
+                        <span>{{ item.product.name }}</span>
+                        <span class="text-muted"> × {{ item.quantity }}</span>
+                    </div>
+                    <span>{{ item.total_price }} ₽</span>
+                </div>
+                {% endfor %}
+                <hr>
+                <div class="d-flex justify-content-between mb-2">
+                    <span>Доставка:</span>
+                    <span class="text-success">Бесплатно</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <strong>Итого:</strong>
+                    <strong class="fs-5 text-primary">{{ cart.total_price }} ₽</strong>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6><i class="bi bi-info-circle text-primary"></i> Информация</h6>
+                <ul class="small text-muted mb-0">
+                    <li>Доставка в течение 1-3 рабочих дней</li>
+                    <li>Оплата при получении или онлайн</li>
+                    <li>Возврат в течение 14 дней</li>
+                    <li>Гарантия на все товары</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('checkoutForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Обработка...';
+
+        // Сброс ошибок
+        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        document.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+
+        const formData = new FormData(this);
+
+        fetch('/checkout/process/', {
+            method: 'POST',
+            headers: {'X-CSRFToken': csrftoken},
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showToast(data.message, 'success');
+                updateCartBadge(0);
+                setTimeout(() => {
+                    window.location.href = data.redirect_url;
+                }, 1000);
+            } else if (data.errors) {
+                for (let field in data.errors) {
+                    const input = document.querySelector(`[name="${field}"]`);
+                    if (input) {
+                        input.classList.add('is-invalid');
+                        const errorEl = document.getElementById(`error-${field}`);
+                        if (errorEl) {
+                            errorEl.textContent = data.errors[field].join(', ');
+                        }
+                    }
+                }
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Подтвердить заказ';
+            }
+        })
+        .catch(error => {
+            showToast('Произошла ошибка. Попробуйте ещё раз.', 'danger');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-check-circle"></i> Подтвердить заказ';
+        });
+    });
+</script>
+{% endblock %}
