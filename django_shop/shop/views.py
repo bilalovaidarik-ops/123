@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.db.models import Q
 from .models import Category, Product, Cart, CartItem, Order, OrderItem
 from .forms import OrderForm
@@ -18,6 +19,7 @@ def get_or_create_cart(request):
 
 
 # 1. Главная страница
+@ensure_csrf_cookie
 def home(request):
     categories = Category.objects.all()
     featured_products = Product.objects.filter(available=True)[:8]
@@ -31,6 +33,7 @@ def home(request):
 
 
 # 2. Список всех товаров
+@ensure_csrf_cookie
 def product_list(request):
     products = Product.objects.filter(available=True)
     categories = Category.objects.all()
@@ -54,6 +57,7 @@ def product_list(request):
 
 
 # 3. Детальная страница товара
+@ensure_csrf_cookie
 def product_detail(request, slug):
     product = get_object_or_404(Product, slug=slug, available=True)
     related_products = Product.objects.filter(category=product.category, available=True).exclude(id=product.id)[:4]
@@ -65,6 +69,7 @@ def product_detail(request, slug):
 
 
 # 4. Товары по категории
+@ensure_csrf_cookie
 def category_products(request, slug):
     category = get_object_or_404(Category, slug=slug)
     products = Product.objects.filter(category=category, available=True)
@@ -78,6 +83,7 @@ def category_products(request, slug):
 
 
 # 5. Корзина
+@ensure_csrf_cookie
 def view_cart(request):
     cart = get_or_create_cart(request)
     items = cart.items.select_related('product').all()

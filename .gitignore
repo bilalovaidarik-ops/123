@@ -1,5 +1,8 @@
-node_modules/
-.next/
-dist/
-build/
 *.log
+__pycache__/
+*.pyc
+db.sqlite3
+venv/
+.env
+node_modules/
+dist/

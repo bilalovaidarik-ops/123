@@ -12,11 +12,25 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 django.setup()
 
+from django.core.management import call_command
 from shop.models import Category, Product
 from django.contrib.auth.models import User
 
 
 def populate():
+    # Автоматически применяем миграции, если база ещё не создана
+    # (иначе падает с ошибкой "no such table: auth_user")
+    from django.db import connection
+    from django.db.utils import OperationalError
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1 FROM django_migrations LIMIT 1")
+        print("→ База данных уже инициализирована")
+    except OperationalError:
+        print("→ Таблицы не найдены, выполняю migrate...")
+        call_command('migrate', '--noinput', verbosity=0)
+        print("✓ Миграции применены")
+
     print("Начинаю заполнение базы данных...")
 
     # Создание суперпользователя
